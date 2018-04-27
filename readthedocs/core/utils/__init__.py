@@ -75,7 +75,7 @@ def cname_to_slug(host):
     return slug
 
 
-def trigger_build(project, version=None, record=True, force=False, basic=False):
+def trigger_build(project, version=None, record=True, force=False, basic=False, execute_task=True):
     """
     Trigger build for project and version.
 
@@ -127,10 +127,12 @@ def trigger_build(project, version=None, record=True, force=False, basic=False):
     options['soft_time_limit'] = time_limit
     options['time_limit'] = int(time_limit * 1.2)
 
-    update_docs = UpdateDocsTask()
-    update_docs.apply_async(kwargs=kwargs, **options)
-
-    return build
+    if not execute_task:
+        return UpdateDocsTask().si(**kwargs, options=options)
+    else:
+        update_docs = UpdateDocsTask()
+        update_docs.apply_async(kwargs=kwargs, **options)
+        return build
 
 
 def send_email(recipient, subject, template, template_html, context=None,
